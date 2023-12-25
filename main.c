@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include<time.h>
 #include <string.h>
 typedef struct horaire {
   int heure;
@@ -36,25 +35,26 @@ int compare(char a[30], char b[30]) {
     return 1;
 }
 int verifierID1(int id_to_check) {
-
-  FILE * file = fopen("reservations.txt", "r");
+  FILE *file = fopen("reservations.txt", "r");
   if (file == NULL) {
     printf("Erreur lors de l'ouverture du fichier");
     exit(1);
   }
-  int id;
-  int nom, prenom, jour;
-  char des[50];
-  char mois[30], annee[30];
-  while (fscanf(file, "%d %d/%d/%d %s:%s %s", & id, & nom, & prenom, & jour, & mois, & annee, des) != EOF) {
+
+  int id, day, month, year;
+  char time[10], destination[30];
+
+  while (fscanf(file, "%d %d/%d/%d %s %s", &id, &day, &month, &year, time, destination) != EOF) {
     if (id == id_to_check) {
       fclose(file);
       return 1;
     }
   }
+
   fclose(file);
   return 0;
 }
+
 int verifierID(int id_to_check) {
   FILE * file = fopen("compt voy.txt", "r");
   if (file == NULL) {
@@ -75,7 +75,7 @@ int verifierID(int id_to_check) {
 }
 void creecompt() {
   Voyageur v;
-  FILE * f = fopen("compt voy.txt", "w");
+  FILE * f = fopen("compt voy.txt", "a");
   if (f == NULL) {
     printf("Erreur lors de l'ouverture du fichier");
     exit(1);
@@ -114,8 +114,14 @@ int reserver() {
     do {
             printf("Votre CIN ici : ");
             scanf("%d", &x);
+            if (verifierID1(x)==1) {
+                printf("Deja reserve,modifier votre reservation??\n");
+                modifier(x);
+            }
+            if (verifierID(x)==0){
+            printf("aucun compt associe ,cree un nouveau compt\n");
+            creecompt();}
     }while (verifierID(x)==0 || verifierID1(x)==1);
-    printf("erreur ici ; ");
     FILE *f = fopen("reservations.txt", "a");
     if (f == NULL) {
         printf("Erreur lors de l'ouverture du fichier");
@@ -139,6 +145,9 @@ int reserver() {
     printf("Merci de choisir votre commande : ");
     scanf("%d", & c1);
   } while (c1 < 0 || c1 > 23);
+  if (c1==0) {
+    application();
+  }
   do {
     printf("La date de reservation(JJ MM AAAA):");
     scanf("%d %d %d", & d.JOUR, & d.MOIS, & d.ANNEE);
@@ -190,7 +199,6 @@ void tous() {
   char destination[30];
   float price;
   char currency[4];
-
   while (fscanf(f, "%d:%*d %s %f %s", & hour, destination, & price, currency) == 4) {
     printf("%02d:00 - Destination: %s - Prix de ticket: %.2f %s\n", hour, destination, price, currency);
   }
@@ -218,7 +226,7 @@ void detailsbus() {
   } while (c < 0 || c > 24);
    char destinations[24][30] = {
         "Alkassrine", "Ariana", "Banzart", "Beja", "benarous", "Elkef", "Gabes", "Gafsa",
-        "Jendouba", "Kairouan", "Mahdia", "Medenine", "Monastir", "Nabul", "kbili", "SidiBouzid",
+        "Jendouba", "Kairouan", "Mahdia", "Medenine", "Monastir", "Nabul", "kbili", "sfax","SidiBouzid",
         "Silyanah", "Sousse", "Tataouine", "Touzer", "Tunis", "Zaghwan"};
   FILE * f = fopen("bus.txt", "r");
   if (f == NULL) {
@@ -255,7 +263,6 @@ void detailsbus() {
   }
   application();
 }
-
 void supp(int deleteID) {
     char deleteIDString[9];
     snprintf(deleteIDString, sizeof(deleteIDString), "%08d", deleteID);
@@ -264,30 +271,25 @@ void supp(int deleteID) {
         printf("Cannot open file %s\n", "reservations.txt");
         exit(1);
     }
-
     FILE *tempFile = fopen("temp.txt", "w");
     if (tempFile == NULL) {
         printf("Cannot create temporary file\n");
         fclose(file);
         exit(1);
     }
-
     char line[1000];
     char id[9];
-
     while (fgets(line, sizeof(line), file) != NULL) {
         strncpy(id, line, 8);
 
     }
         if (strcmp(id, deleteIDString) != 0) {
             fputs(line, tempFile);
-
     }
-
     fclose(file);
     fclose(tempFile);
 
-    if (remove("reservation.txt") != 0) {
+    if (remove("reservations.txt") != 0) {
         printf("Error deleting the file\n");
         exit(1);
     }
@@ -372,15 +374,15 @@ application();
 void modifheure(int modifyID) {
   printf("Heure de reservation est: \n");
   printf("\t\t\t\t ________________________________________________________________________\n");
-  printf("\t\t\t\t| 1 : 8H           | 11 : 12H            | 17 : 17H                       |\n");
-  printf("\t\t\t\t|                                                                         |\n");
+  printf("\t\t\t\t| 1 : 8H           | 2 : 12H            | 3 : 17H                       |\n");
+  printf("\t\t\t\t|                                                                       |\n");
   printf("\t\t\t\t|_________________________________________________________________________ \n");
   printf("\n");
   int c;
   do {
     printf("Merci de choisir votre commande : ");
     scanf("%d", & c);
-  } while (c < 0 || c > 24);
+  } while (c < 1 || c > 3);
    char heure[24][30] = {"08:00","12:00","17:00"};
     char modifyIDString[9];
     snprintf(modifyIDString, sizeof(modifyIDString), "%08d", modifyID);
@@ -390,14 +392,12 @@ void modifheure(int modifyID) {
         printf("Cannot open file %s\n", "reservations.txt");
         exit(1);
     }
-
     FILE *tempFile = fopen("temp.txt", "w");
     if (tempFile == NULL) {
         printf("Cannot create temporary file\n");
         fclose(file);
         exit(1);
     }
-
     char line[1000];
     char id[9];
     char date[20];
@@ -411,7 +411,6 @@ void modifheure(int modifyID) {
             strncpy(time, heure[c-1], sizeof(time));
             fprintf(tempFile, "%s %s %s %s\n", id, date, time, destination);
         } else {
-
             fputs(line, tempFile);
         }
     }
@@ -429,7 +428,6 @@ printf("modification effecue avec succee \n")  ;
 application();
 }
 void modifdate(int modifyID) {
-
      date d;
       do {
     printf("La Nouvelle date de reservation(JJ MM AAAA):");
@@ -440,7 +438,7 @@ void modifdate(int modifyID) {
     char modifyIDdate[100];
     snprintf(modifyIDString, sizeof(modifyIDString), "%08d", modifyID);
      snprintf(modifyIDdate, sizeof(modifyIDString), "%d/%d/%d", d.JOUR,d.MOIS,d.ANNEE);
-    FILE *file = fopen("reservation.txt", "r");
+    FILE *file = fopen("reservations.txt", "r");
     if (file == NULL) {
         printf("Cannot open file %s\n", "reservations.txt");
         exit(1);
@@ -463,7 +461,6 @@ void modifdate(int modifyID) {
             strncpy(date, modifyIDdate, sizeof(date));
             fprintf(tempFile, "%s %s %s %s\n", id, date, time, destination);
         } else {
-
             fputs(line, tempFile);
         }
     }
@@ -487,7 +484,7 @@ void modifier(int y) {
     printf("Votre CIN ici : ");
     scanf("%d", & x);
     if (verifierID1(x) == 0) {
-      printf("Aucune reservation sous ce N°CIN \n");
+      printf("Aucune reservation sous ce NÂ°CIN \n");
       application();
     }
   }while (verifierID1(x) == 0) ;}
@@ -526,7 +523,6 @@ void modifier(int y) {
     application();
     break;}
 }
-
 void application() {
   printf("\t\t\t\t _________________________________________________ \n");
   printf("\t\t\t\t|        ----Bienvenue Sur E-Bus Manouba ----     | \n");
@@ -534,6 +530,7 @@ void application() {
   printf("\t\t\t\t| 2 : cree une nouvelle reservation               | \n");
   printf("\t\t\t\t| 3 : afficher les details des bus                | \n");
   printf("\t\t\t\t| 4 : modifier les details d'une reservation      | \n");
+  printf("\t\t\t\t| 0 : Imprimer le recu.                           | \n");
   printf("\t\t\t\t| 0 : Quitter.                                    | \n");
   printf("\t\t\t\t|_________________________________________________| \n");
   printf("\n");
@@ -547,8 +544,8 @@ void application() {
 int main() {
   application();
 }
-void commande(int x) {
-  switch (x) {
+void commande(int y) {
+  switch (y) {
   case 1:
     creecompt();
     break;
@@ -560,6 +557,7 @@ void commande(int x) {
     break;
   case 4:
     modifier(0);
+    break;
   case 0:
     exit(1);
   }
