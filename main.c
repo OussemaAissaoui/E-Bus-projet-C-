@@ -263,31 +263,54 @@ void detailsbus() {
   }
   application();
 }
-void supp(int deleteID) {
+void supp() {
+    int x;
+    printf("Votre CIN ici : ");
+    scanf("%d", &x);
+
+    if (verifierID1(x) == 0) {
+        printf("Aucune reservation sous ce N°CIN \n");
+        application();
+        return; 
+    }
+
     char deleteIDString[9];
-    snprintf(deleteIDString, sizeof(deleteIDString), "%08d", deleteID);
+    snprintf(deleteIDString, sizeof(deleteIDString), "%08d", x);
+
     FILE *file = fopen("reservations.txt", "r");
     if (file == NULL) {
         printf("Cannot open file %s\n", "reservations.txt");
         exit(1);
     }
+
     FILE *tempFile = fopen("temp.txt", "w");
     if (tempFile == NULL) {
         printf("Cannot create temporary file\n");
         fclose(file);
         exit(1);
     }
+
     char line[1000];
     char id[9];
+    int found = 0; 
     while (fgets(line, sizeof(line), file) != NULL) {
         strncpy(id, line, 8);
+        id[8] = '\0'; 
 
-    }
-        if (strcmp(id, deleteIDString) != 0) {
+        if (compare(id, deleteIDString) != 0) {
             fputs(line, tempFile);
+        } else {
+            found = 1; 
+        }
     }
+
     fclose(file);
     fclose(tempFile);
+
+    if (!found) {
+        printf("ID non trouve dans le fichier\n");
+        return;
+    }
 
     if (remove("reservations.txt") != 0) {
         printf("Error deleting the file\n");
@@ -298,9 +321,11 @@ void supp(int deleteID) {
         printf("Error renaming the file\n");
         exit(1);
     }
-printf("Annulation effectue avec succee");
-application();
+
+    printf("Annulation effectue avec succes\n");
+    application();
 }
+
 void modifdes(int modifyID) {
   printf("votre nouvelle destination est: \n");
       printf("\t\t\t\t ___________________________________________________________________________ \n");
@@ -368,8 +393,8 @@ void modifdes(int modifyID) {
         printf("Erreur lors du renommage du fichier temporaire\n");
         exit(1);
     }
-printf("modification effecue avec succee \n")  ;
-application();
+        printf("modification effecue avec succee \n")  ;
+        application();
 }
 void modifheure(int modifyID) {
   printf("Heure de reservation est: \n");
@@ -490,10 +515,9 @@ void modifier(int y) {
   }while (verifierID1(x) == 0) ;}
     printf("\t\t\t\t _________________________________________________ \n");
   printf("\t\t\t\t|       ----modifier une reservation ----         | \n");
-  printf("\t\t\t\t| 1 : annuler votre reservation                   | \n");
-  printf("\t\t\t\t| 2 : modifier la date de reservation             | \n");
-  printf("\t\t\t\t| 3 : modifier l'heure de reservation             | \n");
-  printf("\t\t\t\t| 4 : modifier la destination                     | \n");
+  printf("\t\t\t\t| 1 : modifier la date de reservation             | \n");
+  printf("\t\t\t\t| 2 : modifier l'heure de reservation             | \n");
+  printf("\t\t\t\t| 3 : modifier la destination                     | \n");
   printf("\t\t\t\t| 0 : retour.                                     | \n");
   printf("\t\t\t\t|_________________________________________________| \n");
   printf("\n");
@@ -501,13 +525,9 @@ void modifier(int y) {
   do {
     printf("Merci de choisir votre commande : ");
     scanf("%d", & c);
-  } while (c < 0 || c > 4);
+  } while (c < 0 || c > 3);
   switch (c) {
   case 1:
-    if (y==0) supp(x);
-    else supp(y);
-    break;
-   case 2:
         if (y==0) modifdate(x);
         else modifdate(y);
         break ;
@@ -530,7 +550,7 @@ void application() {
   printf("\t\t\t\t| 2 : cree une nouvelle reservation               | \n");
   printf("\t\t\t\t| 3 : afficher les details des bus                | \n");
   printf("\t\t\t\t| 4 : modifier les details d'une reservation      | \n");
-  printf("\t\t\t\t| 0 : Imprimer le recu.                           | \n");
+  printf("\t\t\t\t| 5 : annuler votre reservation.                  | \n");
   printf("\t\t\t\t| 0 : Quitter.                                    | \n");
   printf("\t\t\t\t|_________________________________________________| \n");
   printf("\n");
@@ -538,7 +558,7 @@ void application() {
   do {
     printf("Merci de choisir votre commande : ");
     scanf("%d", & c);
-  } while (c < 0 || c > 4);
+  } while (c < 0 || c > 5);
   commande(c);
 }
 int main() {
@@ -557,6 +577,9 @@ void commande(int y) {
     break;
   case 4:
     modifier(0);
+    break;
+  case 5:
+    supp();
     break;
   case 0:
     exit(1);
